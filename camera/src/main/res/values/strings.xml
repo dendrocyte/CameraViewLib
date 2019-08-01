@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">CameraView</string>
+    <string name="camera_permission_title">Camera Permission</string>
+    <string name="camera_permission_msg">request to capture image to present the display</string>
+    <string name="storage_permission_title">Storage Permission</string>
+    <string name="storage_permission_msg">request to fetch image to present the display</string>
+    <string name="allow">allow</string>
+    <string name="no_thanks">no, thanks</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
