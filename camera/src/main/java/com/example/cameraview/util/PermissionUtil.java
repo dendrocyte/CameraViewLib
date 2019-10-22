@@ -4,7 +4,9 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.util.Log;
+
 import androidx.annotation.StringRes;
+
 import com.example.cameraview.R;
 import com.yanzhenjie.permission.Action;
 import com.yanzhenjie.permission.AndPermission;
@@ -67,7 +69,8 @@ public class PermissionUtil {
 
     /* dangerous permission: when deny first, second time will show here*/
     static class Rtl<T> implements Rationale<T> {
-        @StringRes int title, msg;
+        @StringRes
+        int title, msg;
         public Rtl(@StringRes int title, @StringRes int msg) {
             this.title = title;
             this.msg = msg;

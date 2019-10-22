@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+<!--
+https://developer.android.com/reference/android/support/v4/content/FileProvider
+files-path:
+Represents files in the "files/" subdirectory of your app's internal storage area.
+=> 代表在這的app 底下的files欓
+This subdirectory is the same as the value returned by Context.getFilesDir().
+@param name= "A URI path segment"
+-->
+    <files-path
+            name="upload_photo"
+            path="." />
+<!--    若是要存在這個app/.../file 下的話-->
+</paths>
+

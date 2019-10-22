@@ -1,7 +1,7 @@
 package com.example.cameraview;
 
 /**
- * Created by luyiling on 2019-07-30
+ * Created by luyiling on 2019-10-21
  * Modified by
  *
  * <title> </title>
@@ -13,6 +13,6 @@ package com.example.cameraview;
  * @params
  * @params </IMPORTANT>
  */
-public interface OnPhotoUpdateListener<E>{
-    void updatePhoto(E load, int from);
+public interface OnFetchListener<E>{
+    void onUpdate(E load, int from);
 }

@@ -9,23 +9,20 @@ import android.util.Log
 import androidx.fragment.app.FragmentActivity
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.annotation.GlideModule
-import com.example.cameraview.Constants
 import com.example.cameraview.Constants.IMAGE_FROM_GALLERY
 import com.example.cameraview.Constants.REQ_IMAGE_CAPTURE
+import com.example.cameraview.OnFetchListener
 import com.example.cameraview.rxListener.IActivityResultObserver
-import org.jetbrains.anko.alert
 import java.lang.ref.WeakReference
-import com.bumptech.glide.module.AppGlideModule
-
 
 
 /**
  * Created by luyiling on 2019-06-08
- * Modified by
+ * Modified by luyiling on 2019-10-21
+ * 抽象化
  *
 <title> </title>
- * TODO:
+ * TODO: 回傳RequestBuilder<Drawable> 的function params
  * Description:
  *
  *<IMPORTANT>
@@ -33,46 +30,41 @@ import com.bumptech.glide.module.AppGlideModule
  * @params
  *</IMPORTANT>
  */
-object ImgIntentUtil {
-    var weakAct: WeakReference<FragmentActivity>? = null
-    var listener : OnFetchListener? = null
+open class ImgIntentUtil private constructor() : IntentUtil<RequestBuilder<Drawable>>(){
+
+    companion object{
+        private var instance : ImgIntentUtil? = null
+        fun instance() : ImgIntentUtil =
+            instance
+                ?: buildInstance().also { instance = it }
+        private fun buildInstance() = ImgIntentUtil()
+    }
+
+
     private val TAG = ImgIntentUtil::class.java.simpleName
 
 
-    fun fetchImg(activity: FragmentActivity, onFetchListener: OnFetchListener){
-        Log.d(TAG, "req fetch img...")
-        listener = onFetchListener
-        weakAct = WeakReference<FragmentActivity>(activity)
-        activity.fetchImgAlert()
-    }
-
-    fun clear() {
-        weakAct?.clear()
-        listener = null
-        removeObserver()
-    }
-
-    fun getObserver(): IActivityResultObserver? = observer
-    private fun removeObserver() = apply {  }
-
-
-    private var observer: IActivityResultObserver? =
+    override var observer: IActivityResultObserver =
         IActivityResultObserver { requestCode, resultCode, data ->
-            Log.d(TAG, "request code: $requestCode, result code: $resultCode")
             if(resultCode == Activity.RESULT_OK && data != null){
                 when(requestCode){
                     IMAGE_FROM_GALLERY ->{
-                        Log.d(TAG, "get gallery...")
-                        weakAct?.get()?.let {
-                            listener?.onUpdate(Glide.with(it).load(data.data), IMAGE_FROM_GALLERY)
+                        Log.d(TAG, "get gallery...${data.data}")//uri
+                        weakCxt?.get()?.let {
+                            listener?.onUpdate(
+                                Glide.with(it).load(data.data),
+//                                checkNotNull(data.data).toFile(),
+                                IMAGE_FROM_GALLERY
+                            )
                         }
                     }
 
                     REQ_IMAGE_CAPTURE->{
-                        Log.d(TAG, "get camera...")
-                        weakAct?.get()?.let {
+                        Log.d(TAG, "get camera...")//bitmap
+                        weakCxt?.get()?.let {
                             listener?.onUpdate(
-                                Glide.with(it).load(data.extras?.get("data")), REQ_IMAGE_CAPTURE
+                                Glide.with(it).load(data.extras?.get("data")),
+                                REQ_IMAGE_CAPTURE
                             )
                         }
                     }
@@ -81,35 +73,38 @@ object ImgIntentUtil {
         }
 
 
-
-    private fun FragmentActivity.folderIntent()=
+    //TODO: 因為正在找出lifecycle owner不對的問題,所以寫的比較醜
+    override fun Context.folderIntent()=
         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             .also { folderIntent ->
                 folderIntent.type = "image/*"
-                startActivityForResult(
-                    Intent.createChooser(folderIntent , "Pick any photo"),
-                    IMAGE_FROM_GALLERY
-                )
+//                startActivityForResult(
+//                    weakCxt?.get() as Activity,
+//                Intent.createChooser(folderIntent , "Pick any photo"),
+//                IMAGE_FROM_GALLERY,
+//                null
+//                )
+                when{
+//                    this is Fragment -> startActivityForResult(
+//                        Intent.createChooser(folderIntent , "Pick any photo"),
+//                        IMAGE_FROM_GALLERY,
+//                        null
+//                    )
+                    this is FragmentActivity -> startActivityForResult(
+                        Intent.createChooser(folderIntent, "Pick any photo"),
+                        IMAGE_FROM_GALLERY,
+                        null
+                    )
+                }
             }
 
-    private fun FragmentActivity.imgCaptureIntent() =
+    override fun Context.imgCaptureIntent() =
         Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
             takePictureIntent.resolveActivity(packageManager)?.also {
-                startActivityForResult(takePictureIntent, REQ_IMAGE_CAPTURE)
+                Log.d("package name:"," ${it.packageName}")
+                (this as FragmentActivity).startActivityForResult(takePictureIntent, REQ_IMAGE_CAPTURE)
             }
         }
 
-    private fun FragmentActivity.fetchImgAlert(){
-        alert("fetch image from"){
-            positiveButton("from camera"){ imgCaptureIntent() }
-            negativeButton("from folder"){ folderIntent() }
-        }.show()
-    }
-
-    interface OnFetchListener{
-        fun onUpdate(load: RequestBuilder<Drawable> , from: Int)
-    }
-
-    @GlideModule class GlideApp : AppGlideModule()
 }
 

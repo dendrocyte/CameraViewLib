@@ -7,7 +7,7 @@ import com.example.cameraview.ImgDisplayLifecycleObserver
 import com.example.cameraview.rxListener.IActivityResultObservable
 import com.example.cameraview.rxListener.IActivityResultObserver
 import com.example.cameraview.rxListener.IViewActionHandler
-import com.example.cameraview.util.ImgIntentUtil
+import com.example.cameraview.util.IntentUtil
 
 /**
  * Created by luyiling on 2019-07-30
@@ -16,9 +16,10 @@ import com.example.cameraview.util.ImgIntentUtil
 <title> </title>
  * TODO:
  * Description:
- *
- *<IMPORTANT>
- * @params
+ * 統一開parent observer, 但因為每個child 用的listener 的類別不同
+ * 因此由child 去餵給 parent observer
+ * TODO: must to do these, child class
+ * @params intentUtil
  * @params
  *</IMPORTANT>
  */
@@ -26,35 +27,42 @@ open class UtilImgView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : de.hdodenhof.circleimageview.CircleImageView(context, attrs, defStyleAttr),
     IViewActionHandler {
-    private var activityResultObserver: IActivityResultObserver? = null
+    private var activityResultObserver: IActivityResultObserver
     private val TAG = UtilImgView::class.java.simpleName
 
+    /** @required
+     * let child to fill
+     */
+    protected lateinit var intentUtil: IntentUtil<*>
     init {
         activityResultObserver = init()
-        ImgDisplayLifecycleObserver.getInstance().registerViewActionHandler(this)
+        ImgDisplayLifecycleObserver.registerViewActionHandler(this)
     }
 
 
     //***************** FetchImgUtil observe onActivityResult() **************************************//
 
     //get Util activityResultObserver
-    private fun init(): IActivityResultObserver? {
-        return ImgIntentUtil.getObserver()
+    private fun init(): IActivityResultObserver {
+        return intentUtil.observer
     }
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
+        Log.e(TAG, "${context}")
+        activityResultObserver = init()
         if (context is IActivityResultObservable) {
-            activityResultObserver?.let { (context as IActivityResultObservable).addObserver(it) }
+            Log.e(TAG, "${context as IActivityResultObservable}")
+            (context as IActivityResultObservable).addObserver(activityResultObserver)
         }
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
         if (context is IActivityResultObservable) {
-            activityResultObserver?.let { (context as IActivityResultObservable).removeObserver(it) }
+            (context as IActivityResultObservable).removeObserver(activityResultObserver)
         }
-        ImgIntentUtil.clear()
+        intentUtil.clear()
     }
 
     //****************** UtilBtn observe Activity/Fragment lifecycle *****************************//

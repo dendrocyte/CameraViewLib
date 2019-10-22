@@ -16,6 +16,16 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
 
+        <provider
+                android:name="androidx.core.content.FileProvider"
+                android:authorities="@string/authorize_file_provider"
+                android:exported="false"
+                android:grantUriPermissions="true">
+            <meta-data
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/path">
+            </meta-data>
+        </provider>
     </application>
 
 </manifest>
