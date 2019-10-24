@@ -11,9 +11,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.example.cameraview.Constants.IMAGE_FROM_GALLERY
 import com.example.cameraview.Constants.REQ_IMAGE_CAPTURE
-import com.example.cameraview.OnFetchListener
 import com.example.cameraview.rxListener.IActivityResultObserver
-import java.lang.ref.WeakReference
 
 
 /**
@@ -78,31 +76,19 @@ open class ImgIntentUtil private constructor() : IntentUtil<RequestBuilder<Drawa
         Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             .also { folderIntent ->
                 folderIntent.type = "image/*"
-//                startActivityForResult(
-//                    weakCxt?.get() as Activity,
-//                Intent.createChooser(folderIntent , "Pick any photo"),
-//                IMAGE_FROM_GALLERY,
-//                null
-//                )
-                when{
-//                    this is Fragment -> startActivityForResult(
-//                        Intent.createChooser(folderIntent , "Pick any photo"),
-//                        IMAGE_FROM_GALLERY,
-//                        null
-//                    )
-                    this is FragmentActivity -> startActivityForResult(
+                weakAct?.get()?.startActivityForResult(
                         Intent.createChooser(folderIntent, "Pick any photo"),
                         IMAGE_FROM_GALLERY,
                         null
                     )
                 }
-            }
+
 
     override fun Context.imgCaptureIntent() =
         Intent(MediaStore.ACTION_IMAGE_CAPTURE).also { takePictureIntent ->
             takePictureIntent.resolveActivity(packageManager)?.also {
                 Log.d("package name:"," ${it.packageName}")
-                (this as FragmentActivity).startActivityForResult(takePictureIntent, REQ_IMAGE_CAPTURE)
+                weakAct?.get()?.startActivityForResult(takePictureIntent, REQ_IMAGE_CAPTURE)
             }
         }
 

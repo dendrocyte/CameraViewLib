@@ -7,11 +7,12 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
 import com.bumptech.glide.Glide
+
 import com.example.cameraview.Constants
 import com.example.cameraview.OnFetchListener
 import com.example.cameraview.OnPhotoUpdateListener
-import com.example.cameraview.util.FileIntentUtil
-import com.example.cameraview.util.PermissionUtil
+import com.example.cameraview.util.*
+import java.io.File
 
 /**
  * Created by luyiling on 2019-07-30
@@ -29,18 +30,21 @@ import com.example.cameraview.util.PermissionUtil
  */
 class FetchFileImgView @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : UtilImgView1(context, attrs, defStyleAttr) {
+) : UtilImgView(context, attrs, defStyleAttr) {
     /**
+     * @required [intentUtil] 針對要回傳的格式而改
      * @require if you want to get the photo from lib
      * let user to customize here
      */
-    var listener : OnPhotoUpdateListener<Uri>? = null
+    var listener : OnPhotoUpdateListener<File>? = null
     val TAG = FetchFileImgView::class.java.simpleName
 
     init {
         //Notice:在客製化View class上會遇到無法使用onClickListener的問題，所以改用touchListener
         Log.d(TAG, "${context}")
-        //Notice: 必須要賦予parent class 值
+        /** Notice: 必須要賦予parent class 值
+         * @required [intentUtil] 針對要回傳的格式而改
+         */
         intentUtil = FileIntentUtil.instance()
         setOnTouchListener { v, event ->
             Log.d(TAG, "on touch: $event")
@@ -56,19 +60,26 @@ class FetchFileImgView @JvmOverloads constructor(
      * ask permission -> alert (from camera/ from folder) -> get data from onActivityResult
      * -> let UI to fetch the img
      */
-    private fun init(_context: Context) {
+    private fun init(context: Context) {
         Log.e(TAG, "init custom view")
         PermissionUtil.getInstance().askCameraPermission(context, object : PermissionUtil.Callback {
             @SuppressLint("MissingPermission")
             override fun onSuccess(granted_permission: List<String>) {
                 //permission is ok
                 Log.e(TAG, "permission here")
+                /**
+                 * @required [intentUtil] 針對要回傳的格式而改
+                 */
                 FileIntentUtil.instance().fetchImg(
-                    _context,
-                    Constants.PACKAGE_NAME,
+                    context,
+                    context.getActivityContext(),
                     OnFetchListener { load, from ->
                         Log.d(TAG, "UI:$load")
-                        Glide.with(_context).load(load).into(this@FetchFileImgView)
+                        Glide.with(context)
+                            .load(load)
+                            .thumbnail(0.5f)
+                            .dontAnimate()
+                            .into(this@FetchFileImgView)
                         listener?.updatePhoto(load, from)
                     }
                 )

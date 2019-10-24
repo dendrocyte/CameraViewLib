@@ -1,15 +1,11 @@
 package com.example.cameraview.util
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Drawable
-import android.provider.MediaStore
 import android.util.Log
 import androidx.fragment.app.FragmentActivity
-import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.annotation.GlideModule
-import com.example.cameraview.Constants.IMAGE_FROM_GALLERY
-import com.example.cameraview.Constants.REQ_IMAGE_CAPTURE
 import org.jetbrains.anko.alert
 import com.bumptech.glide.module.AppGlideModule
 import com.example.cameraview.OnFetchListener
@@ -35,25 +31,31 @@ import java.lang.ref.WeakReference
 abstract class IntentUtil<T> {
 
     private val TAG = IntentUtil::class.java.simpleName
-    var pack_name : String =""
     var weakCxt: WeakReference<Context>? = null
+    var weakAct: WeakReference<Activity>? = null
     var listener: OnFetchListener<T>? = null
     abstract var observer: IActivityResultObserver
     /**
      * 為了讓frag / activity 各自收到自己的activityResult, 需要匯入自己的context
      */
-    fun fetchImg(context: Context, pack_name: String, onFetchListener: OnFetchListener<T>){
+    fun fetchImg(context: Context, onFetchListener: OnFetchListener<T>){
         Log.d(TAG, "req fetch img...")
         listener = onFetchListener
-        this.pack_name = pack_name
-//        weakAct = WeakReference<FragmentActivity>(activity)
+
         weakCxt = WeakReference<Context>(context)
         context.fetchImgAlert()
     }
 
+    fun fetchImg(context: Context, activity: Activity, onFetchListener: OnFetchListener<T>){
+        Log.d(TAG, "req fetch img...")
+        listener = onFetchListener
+        weakAct = WeakReference(activity)
+        weakCxt = WeakReference(context)
+        context.fetchImgAlert()
+    }
 
     fun clear() {
-//        weakAct?.clear()
+
         weakCxt?.clear()
         listener = null
         removeObserver()

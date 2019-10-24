@@ -7,12 +7,10 @@ import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.FileProvider
-import androidx.fragment.app.FragmentActivity
 import com.example.cameraview.Constants.*
 import com.example.cameraview.R
 import com.example.cameraview.rxListener.IActivityResultObserver
 import java.io.File
-import java.io.FileOutputStream
 
 
 /**
@@ -25,25 +23,24 @@ import java.io.FileOutputStream
  * @request_code: 標記時代表有要改Constant req_code的話要改這裡
  * @camera: camera改變功能時需要改這裡
  *<IMPORTANT>
- * @feedback_format IntentUril<T>
+ * @params
  * @params
  *</IMPORTANT>
  */
-open class FileIntentUtil private constructor() : IntentUtil<File>(){
+open class ContentUriIntentUtil private constructor() : IntentUtil<Uri>(){
 
     companion object{
-        private var instance : FileIntentUtil? = null
-        private var file_path : String? = null
-        private lateinit var camera_file : File
-        fun instance() : FileIntentUtil =
+        private var instance : ContentUriIntentUtil? = null
+        private var file_path : Uri? = null
+        fun instance() : ContentUriIntentUtil =
             instance
                 ?: buildInstance().also { instance = it }
-        private fun buildInstance() = FileIntentUtil()
+        private fun buildInstance() = ContentUriIntentUtil()
     }
 
 
-    private val TAG = FileIntentUtil::class.java.simpleName
-    //    var weakAct: WeakReference<FragmentActivity>? = null
+    private val TAG = ContentUriIntentUtil::class.java.simpleName
+    //    var weakCxt: WeakReference<FragmentActivity>? = null
 
 
     /**
@@ -63,7 +60,7 @@ open class FileIntentUtil private constructor() : IntentUtil<File>(){
                         Log.d(TAG, "get gallery...${data.data}")//uri
                         weakCxt?.get()?.let {
                             listener?.onUpdate(
-                                saveFile(data.data),
+                                data.data!!,
                                 FILE_FROM_GALLERY
                             )
                         }
@@ -73,9 +70,8 @@ open class FileIntentUtil private constructor() : IntentUtil<File>(){
                         Log.d(TAG, "get camera...")//bitmap
                         //data = null
                         weakCxt?.get()?.let {
-                            //TODO
                             listener?.onUpdate(
-                                camera_file,
+                                file_path,
                                 REQ_FILE_CAPTURE
                             )
                         }
@@ -90,17 +86,16 @@ open class FileIntentUtil private constructor() : IntentUtil<File>(){
      * @request_code [FILE_FROM_GALLERY]
      */
     override fun Context.folderIntent()=
-        Intent(Intent.ACTION_GET_CONTENT)
+        Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             .also { folderIntent ->
                 folderIntent.type = "image/*"
-                folderIntent.addCategory(Intent.CATEGORY_OPENABLE)
                 weakAct?.get()?.startActivityForResult(
                         Intent.createChooser(folderIntent, "Pick any photo"),
                         FILE_FROM_GALLERY,
                         null
                     )
-
             }
+
 
     /**
      * TODO
@@ -112,66 +107,42 @@ open class FileIntentUtil private constructor() : IntentUtil<File>(){
             takePictureIntent.resolveActivity(packageManager)?.also {
                 /**
                  * Step1: create file
-                 * Step2: get content_path -> 是content url
-                 * Step3: get file_path ->是file uri, file://{absolutePath}
-                 *
+                 * Step2: get file_path -> 因為我們要傳uri 所以就不額外拿 file://{absolutePath}
+                 *                         直接傳這個參數
                  */
-                var path : Uri? = null
                  with(createFile()){
                     //cannot use the file.toUri() ->
                     // * 使用FileProvider解决file:// URI引起的FileUriExposedException
                     // * http://gelitenight.github.io/android/2017/01/29/solve-FileUriExposedException-caused-by-file-uri-with-FileProvider.html
                     weakCxt?.get()?.let {
                         //save file_path to be global
-                        path = FileProvider.getUriForFile(
+                        file_path = FileProvider.getUriForFile(
                             it,
                             getString(R.string.authorize_file_provider),
                             this
                         )
                     }
-                     file_path = "file://$absolutePath"
-                     camera_file = absoluteFile
-                     Log.d(TAG, "camera file: $camera_file, ${camera_file.name}")
                 }
-
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, path ) //to camera
+                Log.d(TAG, "url : $file_path")
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, file_path ) //to camera
                 Log.d("package name:"," ${it.packageName}")
                 weakAct?.get()?.startActivityForResult(takePictureIntent, REQ_FILE_CAPTURE)
             }
         }
 
-    /**
-     * @require
-     * this filename fit the Simon require filename-format
-     */
+
     protected fun createFile() : File{
         val nName = "temp"
-        val unix_time = System.currentTimeMillis() / 1000L
         /** create temp file
          *  storage dir -> 這裡是files-path的root,
          *                 若要儲存在root下的folder 要自己建, 搭配xml/path裡的path=替䤭在更內層的folder
          * @param nName -> 因為是tempFile 他自己就有變數
          */
         return File.createTempFile(
-            "$unix_time-$nName",
+            "$nName",
             ".jpg",
             weakCxt?.get()?.filesDir //storage dir
         )
     }
-
-    protected fun saveFile(uri: Uri) : File{
-        val file = createFile()
-        val input
-                = weakCxt?.get()?.contentResolver?.openInputStream(uri)
-        val output = FileOutputStream(file)
-        input?.copyTo(output, 1024)
-        output.close()
-        input?.close()
-        Log.d(TAG, "data= $file")
-        return file
-    }
-
-
-
 }
 
