@@ -31,7 +31,7 @@ android {
         // added during execution.
 
         variant.outputs.each { output ->
-            def fileName = "cameralib-${android.defaultConfig.versionName}"
+            def fileName = "cameralib-${android.defaultConfig.versionName}.aar"
             output.outputFileName = fileName
 
         }
