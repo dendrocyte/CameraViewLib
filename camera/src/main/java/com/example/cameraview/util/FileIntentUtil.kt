@@ -125,7 +125,7 @@ open class FileIntentUtil private constructor() : IntentUtil<File>(){
                         //save file_path to be global
                         path = FileProvider.getUriForFile(
                             it,
-                            getString(R.string.authorize_file_provider),
+                            packageName, //sync with Manifest/provider/authority
                             this
                         )
                     }

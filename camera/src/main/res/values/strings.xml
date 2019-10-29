@@ -7,8 +7,7 @@
     <string name="allow">allow</string>
     <string name="no_thanks">no, thanks</string>
 
-    <!--  TODO: file provider: {applicationId}.fileprovider -->
-    <string name="authorize_file_provider">com.example.cameraview.fileprovider</string>
+
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

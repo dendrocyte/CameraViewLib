@@ -15,9 +15,11 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true">
 
+        <!--sync with Manifest/provider/authority-->
+        <!--  TODO: file provider: {applicationId}.fileprovider -->
         <provider
                 android:name="androidx.core.content.FileProvider"
-                android:authorities="@string/authorize_file_provider"
+                android:authorities="${applicationId}.fileprovider"
                 android:exported="false"
                 android:grantUriPermissions="true">
             <meta-data
